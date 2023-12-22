@@ -1,0 +1,183 @@
+
+Sub Stock()
+
+    'Authored by Blake Singewald
+
+    'loops through all sheets
+    For Each ws In Worksheets
+
+        'Create a Variable to Hold File Name, Last Row, and Year
+        Dim Worksheetname As String
+        
+        'Determine the Last Row
+        Lastrow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+        
+        'Grabbed the WorksheetName
+        Worksheetname = ws.Name
+        'MsgBox Worksheetname
+        
+        'Create a variable to hold ticker symbol
+        Dim Ticker As String
+        'MsgBox Ticker
+        
+        'Creates a variable to hold volume count when needed
+        Dim Volume As Double
+        Volume = 0
+
+        'Resets Color for YearlyChange Column
+        'Columns("J").Interior.ColorIndex = 0
+
+        'Create the new table headers
+        ws.Cells(1, 9).Value = "Ticker"
+        ws.Cells(1, 10).Value = "Yearly Change"
+        ws.Cells(1, 11).Value = "Percent Change"
+        ws.Cells(1, 12).Value = "Total Stock Volume"
+        
+        'Index will be used to set all the values and to know what ticker symbol we are currently on
+        Dim Index As Integer
+        Index = 2
+        
+        'Sets the first stock open pointed at AAB
+        Dim StockOpen As Double
+        StockOpen = ws.Cells(2, 3).Value
+        
+        'initializes StockClose
+        Dim StockClose As Double
+        
+        'initializes YearlyChange
+        Dim YearlyChange As Double
+        
+        'initizalies PercentageChange
+        Dim PercentageChange As Double
+    
+        
+        
+        'Check to see when new ticker is introduced
+        For i = 2 To Lastrow
+        'MsgBox Ticker
+            
+
+            'Checks to see if next cell is the same as current
+            If ws.Cells(i + 1, 1).Value <> ws.Cells(i, 1).Value Then
+                
+                'Sets Ticker name to current cell
+                Ticker = ws.Cells(i, 1).Value
+                
+                'Sets stockclose value, calculates yearly change, sets the value for yearly
+                'change in indexed cell, calculates the percentage w algebra,
+                'resets stockOpen
+                StockClose = ws.Cells(i, 6).Value
+                YearlyChange = StockClose - StockOpen
+                ws.Cells(Index, 10).Value = YearlyChange
+                PercentageChange = YearlyChange / StockOpen
+                ws.Cells(Index, 11).Value = PercentageChange
+                'Changes Cell to Percentage
+                ws.Cells(Index, 11).NumberFormat = "0.00%"
+                                        
+                'sets new stock open for next ticker symbol
+                StockOpen = ws.Cells(i + 1, 3)
+                
+                'Sets Cell to Ticker Symbol
+                ws.Cells(Index, 9).Value = Ticker
+                
+                'Adds last volume value to current total
+                Volume = Volume + ws.Cells(i, 7).Value
+                    
+                'Sets cell to Total Volume
+                ws.Cells(Index, 12).Value = Volume
+              
+                'Resets Volume for new ticker
+                Volume = 0
+                
+                'Updates Index to new row number for next information
+                Index = Index + 1
+            
+            Else
+                
+                'MsgBox i & " " & ws.Cells(i, 7)
+                'Debug.Print i
+                
+                'Adds to total volume count if next cell is same ticker symbol
+                Volume = Volume + ws.Cells(i, 7).Value
+            
+            End If
+        Next i
+        
+        'Identifies the last cell in from all the work previously done
+        LastRow_New = ws.Cells(Rows.Count, 9).End(xlUp).Row
+        
+        For i = 2 To LastRow_New
+            
+            'Sets color of cell to green if PercentageChange is > 0
+            If ws.Cells(i, 10).Value > 0 Then
+            
+                ws.Cells(i, 10).Interior.ColorIndex = 4
+                
+            'Sets color of cell to red if PercentageChange is < 0
+            Else
+                
+                ws.Cells(i, 10).Interior.ColorIndex = 3
+                
+            End If
+         Next i
+           
+        'Sets cells to each word for further calculations
+        ws.Cells(1, 16).Value = "Ticker"
+        ws.Cells(1, 17).Value = "Value"
+        ws.Cells(2, 15).Value = "Greatest % Increase"
+        ws.Cells(3, 15).Value = "Greatest % Decrease"
+        ws.Cells(4, 15).Value = "Greatest Total Volume"
+        
+        'Sets GreatestInc / Dec for comparision to find greatest increse/decrease
+        Dim GreatestInc As Double
+        GreatestInc = 0
+  
+        Dim GreatestDec As Double
+        GreatestDec = 0
+        
+        'Sets for comparison of most volume traded
+        Dim GreatestVol As Integer
+        GreastestVol = 0
+        
+        'Checks to see if the next ticker value is greater than the current
+        'Greatest increase of less than Greastes Decrease
+        For i = 2 To LastRow_New
+            If ws.Cells(i + 1, 11).Value > GreatestInc Then
+            
+   '        MsgBox ws.Cells(i + 1, 11).Value & " > " & GreatestInc
+                GreatestInc = ws.Cells(i + 1, 11)
+                ws.Cells(2, 16) = ws.Cells(i + 1, 9).Value
+                
+            ElseIf ws.Cells(i + 1, 11).Value < GreatestDec Then
+                GreatestDec = ws.Cells(i + 1, 11)
+                ws.Cells(3, 16) = ws.Cells(i + 1, 9).Value
+                
+            End If
+        Next i
+        
+        'Puts value of each GreastestInc/Dec into cell
+        ws.Cells(2, 17) = GreatestInc
+        ws.Cells(3, 17) = GreatestDec
+        
+        'Changes Cell to Percentage
+        ws.Cells(2, 17).NumberFormat = "0.00%"
+        ws.Cells(3, 17).NumberFormat = "0.00%"
+        
+        'Checks to see if the next ticker volume is greater than the current
+        For i = 2 To LastRow_New
+            If ws.Cells(i + 1, 12).Value > GreatestVol Then
+            
+            GreastestVol = ws.Cells(i + 1, 12)
+            ws.Cells(4, 16) = ws.Cells(i + 1, 9).Value
+            
+            End If
+        Next i
+        
+        'Puts value of GreatestVol into indicated Cells
+        ws.Cells(4, 17) = GreastestVol
+            
+    Next ws
+       
+
+End Sub
+
